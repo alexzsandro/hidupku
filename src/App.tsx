@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import {
   Check,
@@ -104,16 +104,14 @@ export default function App() {
     const completed = next
       .filter((x) => x.status === "done")
       .reduce((sum, x) => sum + x.weight, 0);
-    await supabase
-      .from("daily_stats")
-      .upsert({
-        user_id: user.id,
-        stat_date: today(),
-        total_points: total,
-        completed_points: completed,
-        xp_earned: completed * 10,
-        goal_reached: total > 0 && completed / total >= 0.6,
-      });
+    await supabase.from("daily_stats").upsert({
+      user_id: user.id,
+      stat_date: today(),
+      total_points: total,
+      completed_points: completed,
+      xp_earned: completed * 10,
+      goal_reached: total > 0 && completed / total >= 0.6,
+    });
   }
   async function changeStatus(item: Occurrence, status: Status) {
     if (!supabase) return;
@@ -158,17 +156,15 @@ export default function App() {
   async function createTask(e: FormEvent) {
     e.preventDefault();
     if (!supabase || !user || !form.title.trim()) return;
-    await supabase
-      .from("tasks")
-      .insert({
-        user_id: user.id,
-        title: form.title.trim(),
-        notes: form.notes.trim() || null,
-        weight: form.weight,
-        kind: form.recurring ? "recurring" : "one_time",
-        scheduled_date: form.recurring ? null : today(),
-        recurrence_days: form.recurring ? [weekday()] : [],
-      });
+    await supabase.from("tasks").insert({
+      user_id: user.id,
+      title: form.title.trim(),
+      notes: form.notes.trim() || null,
+      weight: form.weight,
+      kind: form.recurring ? "recurring" : "one_time",
+      scheduled_date: form.recurring ? null : today(),
+      recurrence_days: form.recurring ? [weekday()] : [],
+    });
     setForm(emptyForm);
     setShowForm(false);
     await load();
@@ -195,15 +191,12 @@ export default function App() {
       .sort((a, b) => a.focus_rank! - b.focus_rank!),
     backlog = items.filter((i) => !i.focus_rank);
   const active = items.find((i) => i.status === "in_progress");
-  const streak = useMemo(() => {
-    let count = 0;
-    for (let i = 0; i < 7; i++) {
-      const stat = history.find((h) => h.stat_date === dateOffset(-i));
-      if (stat?.goal_reached) count++;
-      else break;
-    }
-    return count;
-  }, [history]);
+  let streak = 0;
+  for (let i = 0; i < 7; i++) {
+    const stat = history.find((h) => h.stat_date === dateOffset(-i));
+    if (stat?.goal_reached) streak++;
+    else break;
+  }
   return (
     <main className="app-shell">
       <header>
